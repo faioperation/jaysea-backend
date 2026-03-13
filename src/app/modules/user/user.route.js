@@ -19,7 +19,7 @@ router.get("/user-details/:id", checkAuthMiddleware(...Object.values(Role)), Use
 
 router.get("/all", UserController.getAllUsersWithProfile);
 
-router.post("/update-user", checkAuthMiddleware(Role.SYSTEM_OWNER), UserController.updateUser);
+router.post("/update-user", checkAuthMiddleware(...Object.values(Role)), UserController.updateUser);
 
 router.patch(
     "/update-profile",

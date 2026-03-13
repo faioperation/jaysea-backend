@@ -2,6 +2,7 @@ import { envVars } from "../../../config/env.js";
 import DevBuildError from "../../../lib/DevBuildError.js";
 import bcrypt from "bcrypt";
 import { Role } from "../../../utils/role.js";
+import { de } from "zod/locales";
 
 export const MobileUserService = {
     findByEmail: async (prisma, email) =>
@@ -18,6 +19,8 @@ export const MobileUserService = {
                 email: true,
                 name: true,
                 avatarUrl: true,
+                designation: true,
+                language: true,
                 role: true,
                 isVerified: true,
                 createdAt: true,
@@ -70,7 +73,7 @@ export const createMobileUserService = async (payload) => {
             avatarUrl: picture?.url,
             avatarUrlPath: picture?.path,
             isVerified: false,
-            role: Role.CUSTOMER,
+            role: Role.USER,
             oauthProvider: "email",
             ...rest,
         },

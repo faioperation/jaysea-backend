@@ -22,9 +22,10 @@ export const checkAuthMiddleware =
         const jwtToken = token.replace(/^Bearer\s*/i, "");
         const decoded = jwt.verify(jwtToken, envVars.JWT_SECRET_TOKEN);
 
-        // Determine which table to search based on the role or route
+        // Determine which table to search based on the route
+        const isMobileRequest = req.originalUrl.includes("/mobile");
         let user = null;
-        if (decoded.role && decoded.role.toLowerCase() === "customer") {
+        if (isMobileRequest) {
           user = await prisma.mobileUser.findUnique({
             where: { id: decoded.id },
           });
@@ -33,7 +34,6 @@ export const checkAuthMiddleware =
             where: { id: decoded.id },
           });
         }
-        // end of mobile app auth folder validation
 
         if (!user) {
           return res.status(401).json({

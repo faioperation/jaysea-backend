@@ -10,7 +10,7 @@ const upload = createMulterUpload({ folder: "avatars" });
 const router = express.Router();
 
 router.post("/register", upload.single("avatar"), validateRequest(MobileUserValidation.registerMobileUserSchema), MobileUserController.registerMobileUser);
-router.get("/profile/me", checkAuthMiddleware(Role.CUSTOMER), MobileUserController.getMobileUserInfo);
-router.patch("/update-profile", checkAuthMiddleware(Role.CUSTOMER), upload.single("avatar"), validateRequest(MobileUserValidation.updateProfileSchema), MobileUserController.updateProfile);
+router.get("/profile/me", checkAuthMiddleware(Role.USER), MobileUserController.getMobileUserInfo);
+router.patch("/update-profile", checkAuthMiddleware(Role.USER), upload.single("avatar"), validateRequest(MobileUserValidation.updateProfileSchema), MobileUserController.updateProfile);
 
 export const MobileUserRoutes = router;

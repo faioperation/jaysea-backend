@@ -10,8 +10,9 @@ datasource db {
 enum UserRole {
   SYSTEM_OWNER   @map("system_owner")
   BUSINESS_OWNER @map("business_owner")
-  STAFF          @map("staff")
-  CUSTOMER       @map("customer")
+  ADMIN          @map("admin")
+  USER          @map("user")
+
 }
 
 enum OAuthProvider {
@@ -28,7 +29,9 @@ model User {
   passwordHash         String?
   avatarUrl            String?
   avatarUrlPath        String?
-  role                 UserRole      @default(CUSTOMER)
+  role                 UserRole      @default(USER)
+  language             String?
+    designation          String?
   isVerified           Boolean       @default(false)
   oauthProvider        OAuthProvider @default(email)
   oauthProviderId      String?
@@ -46,7 +49,9 @@ model MobileUser {
   passwordHash         String?
   avatarUrl            String?
   avatarUrlPath        String?
-  role                 UserRole      @default(CUSTOMER)
+  role                 UserRole      @default(USER)
+  language             String?
+  designation          String?
   isVerified           Boolean       @default(false)
   oauthProvider        OAuthProvider @default(email)
   oauthProviderId      String?

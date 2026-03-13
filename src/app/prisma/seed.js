@@ -9,14 +9,14 @@ export const seedDatabase = async () => {
         const passwordHash = await bcrypt.hash("123456", 10);
 
         const standardUsers = [
-            { email: "user1@test.com", name: "User One", role: Role.CUSTOMER },
-            { email: "user2@test.com", name: "User Two", role: Role.CUSTOMER },
+            { email: "user1@test.com", name: "User One", role: Role.USER },
+            { email: "user2@test.com", name: "User Two", role: Role.USER },
             { email: "admin@test.com", name: "Admin User", role: Role.SYSTEM_OWNER },
         ];
 
         const mobileUsers = [
-            { email: "mobile1@test.com", name: "Mobile One", role: Role.CUSTOMER },
-            { email: "mobile2@test.com", name: "Mobile Two", role: Role.CUSTOMER },
+            { email: "mobile1@test.com", name: "Mobile One", role: Role.USER },
+            { email: "mobile2@test.com", name: "Mobile Two", role: Role.USER },
             { email: "admin.mobile@text.com", name: "Admin Mobile", role: Role.SYSTEM_OWNER },
         ];
 
@@ -33,6 +33,8 @@ export const seedDatabase = async () => {
                         passwordHash: passwordHash,
                         role: user.role,
                         isVerified: true,
+                             language: "en",
+                        designation: "Admin User",
                     },
                 });
                 seedCount++;
@@ -51,6 +53,8 @@ export const seedDatabase = async () => {
                         passwordHash: passwordHash,
                         role: user.role,
                         isVerified: true,
+                        language: "en",
+                        designation: "Mobile User",
                     },
                 });
                 seedCount++;

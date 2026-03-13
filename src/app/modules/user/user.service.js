@@ -2,6 +2,7 @@ import { envVars } from "../../config/env.js";
 import DevBuildError from "../../lib/DevBuildError.js";
 import bcrypt from "bcrypt";
 import { Role } from "../../utils/role.js";
+import { de } from "zod/locales";
 
 export const UserService = {
 
@@ -27,6 +28,8 @@ export const UserService = {
         email: true,
         name: true,
         avatarUrl: true,
+        language: true,
+        designation: true,
         role: true,
         isVerified: true,
         createdAt: true,
@@ -97,7 +100,7 @@ export const createUserService = async (payload) => {
       avatarUrl: picture?.url,
       avatarUrlPath: picture?.path,
       isVerified: false,
-      role: Role.CUSTOMER, // Default role
+      role: Role.ADMIN, // Default role for main User table
       oauthProvider: "email",
       ...rest,
     },
