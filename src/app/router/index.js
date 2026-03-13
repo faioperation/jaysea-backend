@@ -9,6 +9,7 @@ import { OtpRouter } from "../modules/otp/otp.route.js";
 import { MobileUserRoutes } from "../modules/MobileApp-Auth/mobileUser/mobileUser.route.js";
 import { MobileAuthRoutes } from "../modules/MobileApp-Auth/mobileAuth/mobileAuth.route.js";
 import { MobileOtpRoutes } from "../modules/MobileApp-Auth/mobileOtp/mobileOtp.route.js";
+import { AgenManagementRoutes } from "../modules/agenManagement/agenManagement.route.js";
 
 export const router = Router();
 const moduleRoutes = [
@@ -35,6 +36,10 @@ const moduleRoutes = [
   {
     path: "/mobile/otp",
     route: MobileOtpRoutes,
+  },
+  {
+    path: "/agen-management",
+    route: AgenManagementRoutes,
   },
 ];
 

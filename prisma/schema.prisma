@@ -40,6 +40,7 @@ model User {
   forgotPasswordStatus Boolean       @default(false)
 
   @@index([role])
+  agents               Agent[]
 }
 
 model MobileUser {
@@ -60,4 +61,17 @@ model MobileUser {
   forgotPasswordStatus Boolean       @default(false)
 
   @@index([role])
+}
+
+model Agent {
+  id        String   @id @default(uuid())
+  agentName String
+  identity  String
+  behavior  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
