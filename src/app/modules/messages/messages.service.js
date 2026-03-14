@@ -38,12 +38,24 @@ export const MessageService = {
       select: {
         role: true,
         content: true,
+        docummentsUrls: true,
+        docummentsPaths: true,
+        voiceUrls: true,
+        voicePaths: true,
       },
     });
   },
 
   createMessage: async (prisma, owner, data) => {
-    const { instanceId, agentId, ...messageData } = data;
+    const {
+      instanceId,
+      agentId,
+      docummentsUrls,
+      docummentsPaths,
+      voiceUrls,
+      voicePaths,
+      ...messageData
+    } = data;
     let targetInstanceId = instanceId;
 
     // If no instanceId, start a NEW context/instance
@@ -102,6 +114,10 @@ export const MessageService = {
       data: {
         ...messageData,
         instanceId: targetInstanceId,
+        docummentsUrls: docummentsUrls || [],
+        docummentsPaths: docummentsPaths || [],
+        voiceUrls: voiceUrls || [],
+        voicePaths: voicePaths || [],
       },
     });
   },

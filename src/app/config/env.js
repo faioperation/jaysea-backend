@@ -52,6 +52,7 @@ const loadEnvVars = () => {
     GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
     // Frontend
     FRONT_END_URL: process.env.FRONT_END_URL,
+    BACKEND_URL: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`,
   };
 };
 

@@ -120,6 +120,12 @@ model Message {
   role       MessageRole
   content    String       @db.Text
 
+  docummentsUrls  String[]    @default([])
+  docummentsPaths String[]    @default([])
+
+  voiceUrls       String[]    @default([])
+  voicePaths      String[]    @default([])
+
   createdAt  DateTime     @default(now())
 
   @@index([instanceId])

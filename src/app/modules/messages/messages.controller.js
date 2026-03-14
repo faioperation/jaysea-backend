@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import { sendResponse } from "../../utils/sendResponse.js";
 import prisma from "../../prisma/client.js";
 import { MessageService } from "./messages.service.js";
+import { envVars } from "../../config/env.js";
 
 const getOwner = (req) => {
   return {
@@ -39,11 +40,37 @@ const getMessages = async (req, res, next) => {
 const createMessage = async (req, res, next) => {
   try {
     const owner = getOwner(req);
-    const result = await MessageService.createMessage(
-      prisma,
-      owner,
-      req.body
-    );
+
+    // Handle File Uploads
+    let docummentsUrls = [];
+    let docummentsPaths = [];
+    let voiceUrls = [];
+    let voicePaths = [];
+
+    if (req.files) {
+      if (req.files.documents) {
+        req.files.documents.forEach((file) => {
+          const normalizedPath = file.path.replace(/\\/g, "/");
+          docummentsPaths.push(normalizedPath);
+          docummentsUrls.push(`${envVars.BACKEND_URL}/${normalizedPath}`);
+        });
+      }
+      if (req.files.voice) {
+        req.files.voice.forEach((file) => {
+          const normalizedPath = file.path.replace(/\\/g, "/");
+          voicePaths.push(normalizedPath);
+          voiceUrls.push(`${envVars.BACKEND_URL}/${normalizedPath}`);
+        });
+      }
+    }
+
+    const result = await MessageService.createMessage(prisma, owner, {
+      ...req.body,
+      docummentsUrls,
+      docummentsPaths,
+      voiceUrls,
+      voicePaths,
+    });
 
     sendResponse(res, {
       success: true,

@@ -10,6 +10,10 @@ const createMessageSchema = z.object({
     content: z.string({
       required_error: "Content is required",
     }).min(1, "Content cannot be empty"),
+    docummentsUrls: z.array(z.string()).optional(),
+    docummentsPaths: z.array(z.string()).optional(),
+    voiceUrls: z.array(z.string()).optional(),
+    voicePaths: z.array(z.string()).optional(),
   }),
 });
 
