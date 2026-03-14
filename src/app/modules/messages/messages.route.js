@@ -14,6 +14,12 @@ router.get(
 );
 
 router.get(
+  "/my-instances",
+  checkAuthMiddleware(Role.ADMIN, Role.USER, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
+  MessageController.getInstances
+);
+
+router.get(
   "/:instance_id?",
   checkAuthMiddleware(Role.ADMIN, Role.USER, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
   validateRequest(MessageValidation.getMessagesSchema),

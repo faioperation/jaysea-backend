@@ -16,6 +16,17 @@ router.get(
   checkAuthMiddleware(Role.ADMIN, Role.SYSTEM_OWNER),
   AdminController.getAllMobileUsers
 );
+
+router.get(
+  "/user-instances/:id",
+  checkAuthMiddleware(Role.ADMIN, Role.SYSTEM_OWNER),
+  AdminController.getUserInstances
+);
+router.get(
+  "/user-instances/for-ai/:id",
+  AdminController.getUserInstances
+);
+
 router.get(
   "/mobile-users/for-ai",
   AdminController.getAllMobileUsers

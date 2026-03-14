@@ -72,8 +72,26 @@ const getAllMessages = async (req, res, next) => {
   }
 };
 
+const getInstances = async (req, res, next) => {
+  try {
+    const owner = getOwner(req);
+    const { agentId } = req.query;
+    const result = await MessageService.getInstances(prisma, owner, agentId);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: "Instances retrieved successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const MessageController = {
   getMessages,
   createMessage,
   getAllMessages,
+  getInstances,
 };

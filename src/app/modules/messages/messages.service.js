@@ -119,11 +119,21 @@ export const MessageService = {
       include: {
         instance: {
           select: {
+            id: true,
             name: true,
             agentId: true,
+            agent: {
+              select: {
+                agentName: true,
+              },
+            },
           },
         },
       },
     });
+  },
+
+  getInstances: async (prisma, owner, agentId) => {
+    return InstanceMessageService.getInstances(prisma, owner, agentId);
   },
 };

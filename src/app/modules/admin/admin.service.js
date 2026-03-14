@@ -28,4 +28,24 @@ export const AdminService = {
       },
     });
   },
+
+  getUserInstances: async (prisma, id) => {
+    return prisma.instance.findMany({
+      where: {
+        OR: [{ userId: id }, { mobileUserId: id }],
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        messages: {
+          orderBy: { createdAt: "asc" },
+        },
+        agent: {
+          select: {
+            agentName: true,
+            id : true
+          },
+        },
+      },
+    });
+  },
 };

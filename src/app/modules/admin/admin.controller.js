@@ -33,7 +33,24 @@ const getAllMobileUsers = async (req, res, next) => {
   }
 };
 
+const getUserInstances = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await AdminService.getUserInstances(prisma, id);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: "User instances retrieved successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const AdminController = {
   getAllUsers,
   getAllMobileUsers,
+  getUserInstances,
 };
