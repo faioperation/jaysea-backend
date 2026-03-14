@@ -9,7 +9,7 @@ const router = Router();
 
 router.post(
     "/create",
-    checkAuthMiddleware(Role.ADMIN, Role.USER, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
+    checkAuthMiddleware(Role.ADMIN, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
     validateRequest(AgenManagementValidation.createAgentSchema),
     AgenManagementController.createAgent
 );
@@ -21,21 +21,26 @@ router.get(
 );
 
 router.get(
+    "/all/for-ai",
+    AgenManagementController.getAgents
+);
+
+router.get(
     "/:id",
-    checkAuthMiddleware(Role.ADMIN, Role.USER, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
+    checkAuthMiddleware(Role.ADMIN, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
     AgenManagementController.getAgentById
 );
 
 router.patch(
     "/:id",
-    checkAuthMiddleware(Role.ADMIN, Role.USER, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
+    checkAuthMiddleware(Role.ADMIN, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
     validateRequest(AgenManagementValidation.updateAgentSchema),
     AgenManagementController.updateAgent
 );
 
 router.delete(
     "/:id",
-    checkAuthMiddleware(Role.ADMIN, Role.USER, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
+    checkAuthMiddleware(Role.ADMIN, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
     AgenManagementController.deleteAgent
 );
 

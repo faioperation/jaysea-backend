@@ -1,0 +1,30 @@
+import { Router } from "express";
+import { Role } from "../../utils/role.js";
+import { checkAuthMiddleware } from "../../middleware/checkAuthMiddleware.js";
+import validateRequest from "../../middleware/validateRequest.js";
+import { MessageController } from "./messages.controller.js";
+import { MessageValidation } from "./messages.validation.js";
+
+const router = Router();
+
+router.get(
+  "/all-messages",
+  checkAuthMiddleware(Role.ADMIN, Role.USER, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
+  MessageController.getAllMessages
+);
+
+router.get(
+  "/:instance_id?",
+  checkAuthMiddleware(Role.ADMIN, Role.USER, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
+  validateRequest(MessageValidation.getMessagesSchema),
+  MessageController.getMessages
+);
+
+router.post(
+  "/create",
+  checkAuthMiddleware(Role.ADMIN, Role.USER, Role.SYSTEM_OWNER, Role.BUSINESS_OWNER),
+  validateRequest(MessageValidation.createMessageSchema),
+  MessageController.createMessage
+);
+
+export const MessageRoutes = router;

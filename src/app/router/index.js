@@ -10,6 +10,9 @@ import { MobileUserRoutes } from "../modules/MobileApp-Auth/mobileUser/mobileUse
 import { MobileAuthRoutes } from "../modules/MobileApp-Auth/mobileAuth/mobileAuth.route.js";
 import { MobileOtpRoutes } from "../modules/MobileApp-Auth/mobileOtp/mobileOtp.route.js";
 import { AgenManagementRoutes } from "../modules/agenManagement/agenManagement.route.js";
+import { InstanceMessageRoutes } from "../modules/instanceMessage/instanceMessage.route.js";
+import { MessageRoutes } from "../modules/messages/messages.route.js";
+import { AdminRoutes } from "../modules/admin/admin.route.js";
 
 export const router = Router();
 const moduleRoutes = [
@@ -25,6 +28,7 @@ const moduleRoutes = [
     path: "/otp",
     route: OtpRouter,
   },
+  // user auth ends here
   {
     path: "/mobile/user",
     route: MobileUserRoutes,
@@ -37,9 +41,25 @@ const moduleRoutes = [
     path: "/mobile/otp",
     route: MobileOtpRoutes,
   },
+
+  // Mobile auth ends here
   {
     path: "/agen-management",
     route: AgenManagementRoutes,
+  },
+  // agent management ends here
+  {
+    path: "/instances",
+    route: InstanceMessageRoutes,
+  },
+  {
+    path: "/messages",
+    route: MessageRoutes,
+  },
+  // instance message ends here
+  {
+    path: "/admin",
+    route: AdminRoutes,
   },
 ];
 
