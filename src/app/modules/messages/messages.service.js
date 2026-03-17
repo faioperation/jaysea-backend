@@ -110,7 +110,7 @@ export const MessageService = {
       }
     }
 
-  await prisma.message.create({
+    await prisma.message.create({
       data: {
         ...messageData,
         instanceId: targetInstanceId,
@@ -128,15 +128,18 @@ export const MessageService = {
         conversation_id: targetInstanceId,
       });
 
-      // Assuming the response contains the text in response.data.response 
-      // or similar. I'll use a safe fallback.
-      const aiResponseContent = response.data?.response || response.data?.message || JSON.stringify(response.data);
+      console.log("AI API Response:", response.data);
 
-      // Extract attachments if provided by the AI
-      const docummentsUrls = response.data?.docummentsUrls || [];
-      const docummentsPaths = response.data?.docummentsPaths || [];
-      const voiceUrls = response.data?.voiceUrls || [];
-      const voicePaths = response.data?.voicePaths || [];
+      // Extract the nested data object based on the observed response structure: response.data.data.data
+      const responseData = response.data?.data?.data || response.data?.data || response.data;
+      
+      const aiResponseContent = responseData?.content || responseData?.response || responseData?.message || "No response content from AI";
+
+      // Extract attachments if provided by the AI in the same nested level
+      const docummentsUrls = responseData?.docummentsUrls || [];
+      const docummentsPaths = responseData?.docummentsPaths || [];
+      const voiceUrls = responseData?.voiceUrls || [];
+      const voicePaths = responseData?.voicePaths || [];
 
       const assistantMessage = await prisma.message.create({
         data: {
@@ -151,16 +154,45 @@ export const MessageService = {
         },
       });
 
+      // Save Experience if not a filler word (check both user query and AI response)
+      const fillerWords = [
+        "ok", "okay", "yes", "no", "hmm", "hmmm", "huh", "yo", "hey", "hi", 
+        "hello", "thanks", "thank", "cool", "fine", "done", "right", "sure"
+      ];
+      
+      const cleanUserQuery = messageData.content.trim().toLowerCase().replace(/[^\w\s]/gi, '');
+      const cleanResponse = aiResponseContent.toString().trim().toLowerCase().replace(/[^\w\s]/gi, '');
+      
+      if (!fillerWords.includes(cleanUserQuery) && !fillerWords.includes(cleanResponse)) {
+        await prisma.experience.create({
+          data: {
+            userId: owner.id,
+            agentId: (await prisma.instance.findUnique({ where: { id: targetInstanceId }, select: { agentId: true } })).agentId,
+            instanceId: targetInstanceId,
+            userQuery: messageData.content,
+            aiResponse: aiResponseContent.toString(),
+            content: `${messageData.content} ${aiResponseContent.toString()}`,
+          },
+        });
+      }
+
       return assistantMessage;
     } catch (error) {
-      console.error("AI API Call Failed:", error.message);
-      throw new DevBuildError(`Failed to get response from AI: ${error.message}`, 500);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("AI API Error Response:", error.response.data);
+        throw new DevBuildError(`AI API failed (${error.response.status}): ${JSON.stringify(error.response.data)}`, error.response.status);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("AI API No Response:", error.request);
+        throw new DevBuildError("No response received from AI API", 503);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("AI API Request Setup Error:", error.message);
+        throw new DevBuildError(`Error setting up AI API request: ${error.message}`, 500);
+      }
     }
-
-    
-
-
-
 
   },
 

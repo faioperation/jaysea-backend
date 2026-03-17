@@ -42,6 +42,7 @@ model User {
 
    instances   Instance[]
    agents               Agent[]
+   experiences Experience[]
 
   @@index([role])
 }
@@ -60,6 +61,7 @@ model Agent {
   user         User        @relation(fields: [userId], references: [id])
 
   instances    Instance[]
+  experiences Experience[]
 
   @@index([userId])
 }
@@ -87,6 +89,7 @@ model Instance {
   userRole     UserRole?
 
   messages     Message[]
+  experiences Experience[]
 }
 
 model Message {
@@ -109,4 +112,28 @@ model Message {
   createdAt  DateTime     @default(now())
 
   @@index([instanceId])
+}
+
+model Experience {
+  id           String   @id @default(uuid())
+  
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  agentId      String
+  agent        Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  
+  instanceId   String
+  instance     Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  userQuery    String
+  aiResponse   String
+
+  content      String   @db.Text
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([agentId])
+  @@index([instanceId])
+  @@index([createdAt])
 }

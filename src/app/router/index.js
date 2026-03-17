@@ -10,6 +10,7 @@ import { AgenManagementRoutes } from "../modules/agenManagement/agenManagement.r
 import { InstanceMessageRoutes } from "../modules/instanceMessage/instanceMessage.route.js";
 import { MessageRoutes } from "../modules/messages/messages.route.js";
 import { AdminRoutes } from "../modules/admin/admin.route.js";
+import { ExperienceRoutes } from "../modules/experience/experience.route.js";
 
 export const router = Router();
 const moduleRoutes = [
@@ -43,6 +44,10 @@ const moduleRoutes = [
   {
     path: "/admin",
     route: AdminRoutes,
+  },
+  {
+    path: "/experience",
+    route: ExperienceRoutes,
   },
 ];
 
