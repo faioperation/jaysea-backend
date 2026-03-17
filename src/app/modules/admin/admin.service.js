@@ -7,6 +7,8 @@ export const AdminService = {
         name: true,
         email: true,
         role: true,
+        language: true,
+        designation: true,
         isVerified: true,
         createdAt: true,
         updatedAt: true,

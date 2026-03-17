@@ -6,7 +6,7 @@ import { AdminController } from "./admin.controller.js";
 const router = Router();
 
 router.get(
-  "/users",
+  ["/users", "/user"],
   checkAuthMiddleware(Role.ADMIN, Role.SYSTEM_OWNER),
   AdminController.getAllUsers
 );
