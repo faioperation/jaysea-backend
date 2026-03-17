@@ -5,9 +5,14 @@ import { AdminController } from "./admin.controller.js";
 
 const router = Router();
 
+
 router.get(
-  ["/users", "/user"],
+  "/users",
   checkAuthMiddleware(Role.ADMIN, Role.SYSTEM_OWNER),
+  AdminController.getAllUsers
+);
+router.get(
+  "/users/for-ai",
   AdminController.getAllUsers
 );
 
