@@ -60,6 +60,15 @@ export const MessageService = {
     } = data;
     let targetInstanceId = instanceId;
 
+    if (agentId) {
+      const agent = await prisma.agent.findUnique({
+        where: { id: agentId },
+      });
+      if (!agent) {
+        throw new DevBuildError("Agent id does not exist", 404);
+      }
+    }
+
     // If no instanceId, start a NEW context/instance
     if (!targetInstanceId) {
       if (!agentId) {
