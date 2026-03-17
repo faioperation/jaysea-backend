@@ -9,298 +9,255 @@ import { setAuthCookie } from "../../utils/setCookie.js";
 import { StatusCodes } from "http-status-codes";
 import passport from "passport";
 import prisma from "../../prisma/client.js";
+import catchAsync from "../../utils/catchAsync.js";
 
-const credentialLogin = async (req, res, next) => {
-  try {
-    passport.authenticate("local", async (err, user, info) => {
-      try {
-        if (err) {
-          return next(new DevBuildError(err, StatusCodes.UNAUTHORIZED));
-        }
+const credentialLogin = catchAsync(async (req, res, next) => {
+  passport.authenticate("local", async (err, user, info) => {
+    if (err) {
+      return next(new DevBuildError(err, StatusCodes.UNAUTHORIZED));
+    }
 
-        if (!user) {
-          return next(
-            new DevBuildError(
-              info?.message || "Authentication failed",
-              StatusCodes.FORBIDDEN
-            )
-          );
-        }
+    if (!user) {
+      return next(
+        new DevBuildError(
+          info?.message || "Authentication failed",
+          StatusCodes.FORBIDDEN
+        )
+      );
+    }
 
-        // Generate access & refresh tokens
-        const userToken = await createUserTokens(user);
+    // Generate access & refresh tokens
+    const userToken = await createUserTokens(user);
 
-        // Remove sensitive fields before sending user
-        const { passwordHash, ...saveUser } = user;
+    // Remove sensitive fields before sending user
+    const { passwordHash, ...saveUser } = user;
 
-        // Set cookies
-        setAuthCookie(res, userToken);
+    // Set cookies
+    setAuthCookie(res, userToken);
 
-        // Send response
-        sendResponse(res, {
-          success: true,
-          message: "User logged in successfully",
-          statusCode: StatusCodes.OK,
-          data: {
-            accessToken: userToken.accessToken,
-            refreshToken: userToken.refreshToken,
-            user: saveUser,
-          },
-        });
-      } catch (innerError) {
-        next(innerError);
-      }
-    })(req, res, next);
-  } catch (error) {
-    next(error);
-  }
-};
+    // Send response
+    sendResponse(res, {
+      success: true,
+      message: "User logged in successfully",
+      statusCode: StatusCodes.OK,
+      data: {
+        accessToken: userToken.accessToken,
+        refreshToken: userToken.refreshToken,
+        user: saveUser,
+      },
+    });
+  })(req, res, next);
+});
 
 // ✅ Refresh Token
+const getNewAccessToken = catchAsync(async (req, res) => {
+  const refreshToken = req.cookies?.refreshToken;
 
-const getNewAccessToken = async (req, res, next) => {
-  try {
-    // const prisma = req.app.get("prisma"); // REMOVED
-    const refreshToken = req.cookies?.refreshToken;
-
-    if (!refreshToken) {
-      throw new DevBuildError(
-        "No refresh token received from cookies",
-        StatusCodes.BAD_REQUEST
-      );
-    }
-
-    let decoded;
-    try {
-      decoded = jwt.verify(refreshToken, envVars.JWT_REFRESH_TOKEN);
-    } catch (err) {
-      throw new DevBuildError("Invalid refresh token", StatusCodes.FORBIDDEN);
-    }
-
-    const user = await AuthService.findById(prisma, decoded.id);
-
-    if (!user) {
-      throw new DevBuildError("User not found", StatusCodes.NOT_FOUND);
-    }
-
-    if (!user.isVerified) {
-      throw new DevBuildError(
-        "User is not verified. Please verify your email.",
-        StatusCodes.FORBIDDEN
-      );
-    }
-
-    const newAccessToken = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      envVars.JWT_SECRET_TOKEN,
-      { expiresIn: envVars.JWT_EXPIRES_IN }
+  if (!refreshToken) {
+    throw new DevBuildError(
+      "No refresh token received from cookies",
+      StatusCodes.BAD_REQUEST
     );
+  }
 
-    setAuthCookie(res, {
+  let decoded;
+  try {
+    decoded = jwt.verify(refreshToken, envVars.JWT_REFRESH_TOKEN);
+  } catch (err) {
+    throw new DevBuildError("Invalid refresh token", StatusCodes.FORBIDDEN);
+  }
+
+  const user = await AuthService.findById(prisma, decoded.id);
+
+  if (!user) {
+    throw new DevBuildError("User not found", StatusCodes.NOT_FOUND);
+  }
+
+  if (!user.isVerified) {
+    throw new DevBuildError(
+      "User is not verified. Please verify your email.",
+      StatusCodes.FORBIDDEN
+    );
+  }
+
+  const newAccessToken = jwt.sign(
+    { id: user.id, email: user.email, role: user.role },
+    envVars.JWT_SECRET_TOKEN,
+    { expiresIn: envVars.JWT_EXPIRES_IN }
+  );
+
+  setAuthCookie(res, {
+    accessToken: newAccessToken,
+    refreshToken,
+  });
+
+  sendResponse(res, {
+    success: true,
+    message: "New access token retrieved successfully",
+    statusCode: StatusCodes.OK,
+    data: {
       accessToken: newAccessToken,
-      refreshToken,
-    });
+    },
+  });
+});
 
-    sendResponse(res, {
-      success: true,
-      message: "New access token retrieved successfully",
-      statusCode: StatusCodes.OK,
-      data: {
-        accessToken: newAccessToken,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+const logout = catchAsync(async (req, res) => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
 
-const logout = async (req, res, next) => {
-  try {
-    res.clearCookie("accessToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    });
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
 
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    });
+  sendResponse(res, {
+    success: true,
+    message: "User logged out successfully",
+    statusCode: StatusCodes.OK,
+    data: null,
+  });
+});
 
-    sendResponse(res, {
-      success: true,
-      message: "User logged out successfully",
-      statusCode: StatusCodes.OK,
+const forgotPassword = catchAsync(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: StatusCodes.BAD_REQUEST,
+      message: "Email is required",
       data: null,
     });
-  } catch (error) {
-    next(error);
   }
-};
 
-const forgotPassword = async (req, res, next) => {
-  try {
-    // const prisma = req.app.get("prisma"); // REMOVED
-    const { email } = req.body;
+  await forgotPasswordService(prisma, email);
 
-    if (!email) {
-      return sendResponse(res, {
-        success: false,
-        statusCode: StatusCodes.BAD_REQUEST,
-        message: "Email is required",
-        data: null,
-      });
-    }
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Forgot password OTP sent successfully",
+    data: null,
+  });
+});
 
-    await forgotPasswordService(prisma, email);
+const verifyForgotPasswordOtp = catchAsync(async (req, res) => {
+  const { email, otp } = req.body;
 
-    sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.OK,
-      message: "Forgot password OTP sent successfully",
+  if (!email || !otp) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: StatusCodes.BAD_REQUEST,
+      message: "Email and OTP are required",
       data: null,
     });
-  } catch (error) {
-    next(error);
   }
-};
 
-const verifyForgotPasswordOtp = async (req, res, next) => {
-  try {
-    // const prisma = req.app.get("prisma"); // REMOVED
-    const { email, otp } = req.body;
+  const resetToken = await OtpService.verifyForgotPasswordOtp(prisma, email, otp);
 
-    if (!email || !otp) {
-      return sendResponse(res, {
-        success: false,
-        statusCode: StatusCodes.BAD_REQUEST,
-        message: "Email and OTP are required",
-        data: null,
-      });
-    }
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "OTP verified successfully",
+    data: { resetToken },
+  });
+});
 
-    const resetToken = await OtpService.verifyForgotPasswordOtp(prisma, email, otp);
+const resetPassword = catchAsync(async (req, res) => {
+  const { id } = req.user;
+  const { newPassword } = req.body;
 
-    sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.OK,
-      message: "OTP verified successfully",
-      data: { resetToken },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const resetPassword = async (req, res, next) => {
-  try {
-    const { id } = req.user;
-    const { newPassword } = req.body;
-
-    if (!newPassword) {
-      return sendResponse(res, {
-        success: false,
-        statusCode: StatusCodes.BAD_REQUEST,
-        message: "newPassword is required",
-        data: null,
-      });
-    }
-
-    const payload = { id, newPassword };
-
-    await AuthService.resetPassword(payload);
-
-    sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.OK,
-      message: "Password reset successfully",
+  if (!newPassword) {
+    return sendResponse(res, {
+      success: false,
+      statusCode: StatusCodes.BAD_REQUEST,
+      message: "newPassword is required",
       data: null,
     });
-  } catch (error) {
-    next(error);
   }
-};
 
-const googleCallback = async (req, res, next) => {
-  try {
-    let redirectTo = req.query.state ? String(req.query.state) : "";
+  const payload = { id, newPassword };
 
-    // Prevent open redirect issues
-    if (redirectTo.startsWith("/")) {
-      redirectTo = redirectTo.slice(1);
-    }
+  await AuthService.resetPassword(payload);
 
-    const user = req.user; // comes from Passport Google Strategy
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Password reset successfully",
+    data: null,
+  });
+});
 
-    if (!user) {
-      throw new DevBuildError("User not found", StatusCodes.NOT_FOUND);
-    }
+const googleCallback = catchAsync(async (req, res) => {
+  let redirectTo = req.query.state ? String(req.query.state) : "";
 
-    // Generate tokens
-    const tokenInfo = await createUserTokens(user);
-
-    // Set auth cookies
-    setAuthCookie(res, tokenInfo);
-
-    // Redirect to frontend
-    res.redirect(`${envVars.FRONT_END_URL}/${redirectTo}`);
-  } catch (error) {
-    next(error);
+  // Prevent open redirect issues
+  if (redirectTo.startsWith("/")) {
+    redirectTo = redirectTo.slice(1);
   }
-};
 
-const changePassword = async (req, res, next) => {
-  try {
-    const { id } = req.user;
-    const { oldPassword, newPassword } = req.body;
+  const user = req.user; // comes from Passport Google Strategy
 
-    if (!oldPassword || !newPassword) {
-      throw new DevBuildError(
-        "Both oldPassword and newPassword are required",
-        StatusCodes.BAD_REQUEST
-      );
-    }
-
-    await AuthService.changePassword(id, oldPassword, newPassword);
-
-    sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.OK,
-      message: "Password changed successfully",
-      data: null,
-    });
-  } catch (error) {
-    next(error);
+  if (!user) {
+    throw new DevBuildError("User not found", StatusCodes.NOT_FOUND);
   }
-};
 
-const getGoogleUrl = async (req, res, next) => {
-  try {
-    const redirect = req.query.redirect || "/";
-    const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
-    const params = new URLSearchParams({
-      client_id: envVars.GOOGLE_CLIENT_ID,
-      redirect_uri: envVars.GOOGLE_CALLBACK_URL,
-      response_type: "code",
-      scope: "profile email",
-      state: redirect,
-      access_type: "offline",
-      prompt: "consent",
-    });
+  // Generate tokens
+  const tokenInfo = await createUserTokens(user);
 
-    sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.OK,
-      message: "Google login URL retrieved successfully",
-      data: {
-        url: `${baseUrl}?${params.toString()}`,
-      },
-    });
-  } catch (error) {
-    next(error);
+  // Set auth cookies
+  setAuthCookie(res, tokenInfo);
+
+  // Redirect to frontend
+  res.redirect(`${envVars.FRONT_END_URL}/${redirectTo}`);
+});
+
+const changePassword = catchAsync(async (req, res) => {
+  const { id } = req.user;
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    throw new DevBuildError(
+      "Both oldPassword and newPassword are required",
+      StatusCodes.BAD_REQUEST
+    );
   }
-};
+
+  await AuthService.changePassword(id, oldPassword, newPassword);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Password changed successfully",
+    data: null,
+  });
+});
+
+const getGoogleUrl = catchAsync(async (req, res) => {
+  const redirect = req.query.redirect || "/";
+  const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
+  const params = new URLSearchParams({
+    client_id: envVars.GOOGLE_CLIENT_ID,
+    redirect_uri: envVars.GOOGLE_CALLBACK_URL,
+    response_type: "code",
+    scope: "profile email",
+    state: redirect,
+    access_type: "offline",
+    prompt: "consent",
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Google login URL retrieved successfully",
+    data: {
+      url: `${baseUrl}?${params.toString()}`,
+    },
+  });
+});
 
 export const AuthController = {
   credentialLogin,

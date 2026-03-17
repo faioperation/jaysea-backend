@@ -2,17 +2,17 @@ import DevBuildError from "../../lib/DevBuildError.js";
 
 export const InstanceMessageService = {
   createInstance: async (prisma, owner, data) => {
-    const ownerData = owner.isMobile ? { mobileUserId: owner.id } : { userId: owner.id };
     return prisma.instance.create({
       data: {
         ...data,
-        ...ownerData,
+        userId: owner.id,
+        userRole: owner.role,
       },
     });
   },
 
   getInstances: async (prisma, owner, agentId) => {
-    const where = owner.isMobile ? { mobileUserId: owner.id } : { userId: owner.id };
+    const where = { userId: owner.id };
     if (agentId) {
       where.agentId = agentId;
     }
@@ -23,7 +23,7 @@ export const InstanceMessageService = {
   },
 
   getLatestInstance: async (prisma, owner, agentId) => {
-    const where = owner.isMobile ? { mobileUserId: owner.id } : { userId: owner.id };
+    const where = { userId: owner.id };
     if (agentId) {
       where.agentId = agentId;
     }
@@ -34,9 +34,8 @@ export const InstanceMessageService = {
   },
 
   updateInstance: async (prisma, owner, id, data) => {
-    const where = owner.isMobile ? { id, mobileUserId: owner.id } : { id, userId: owner.id };
     const instance = await prisma.instance.findFirst({
-      where,
+      where: { id, userId: owner.id },
     });
 
     if (!instance) {
@@ -52,9 +51,8 @@ export const InstanceMessageService = {
   },
 
   deleteInstance: async (prisma, owner, id) => {
-    const where = owner.isMobile ? { id, mobileUserId: owner.id } : { id, userId: owner.id };
     const instance = await prisma.instance.findFirst({
-      where,
+      where: { id, userId: owner.id },
     });
 
     if (!instance) {

@@ -46,27 +46,6 @@ model User {
   @@index([role])
 }
 
-model MobileUser {
-  id                   String        @id @default(uuid())
-  name                 String
-  email                String        @unique
-  passwordHash         String?
-  avatarUrl            String?
-  avatarUrlPath        String?
-  role                 UserRole      @default(USER)
-  language             String?
-  designation          String?
-  isVerified           Boolean       @default(false)
-  oauthProvider        OAuthProvider @default(email)
-  oauthProviderId      String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-  forgotPasswordStatus Boolean       @default(false)
-
-  instances            Instance[]
-
-  @@index([role])
-}
 // Auth Model Ends Here
 
 model Agent {
@@ -105,8 +84,7 @@ model Instance {
   userId       String?
   user         User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  mobileUserId String?
-  mobileUser   MobileUser? @relation(fields: [mobileUserId], references: [id], onDelete: Cascade)
+  userRole     UserRole?
 
   messages     Message[]
 }
@@ -120,6 +98,8 @@ model Message {
   role       MessageRole
   content    String       @db.Text
 
+  userRole   UserRole?
+
   docummentsUrls  String[]    @default([])
   docummentsPaths String[]    @default([])
 
@@ -129,4 +109,4 @@ model Message {
   createdAt  DateTime     @default(now())
 
   @@index([instanceId])
-}
+}

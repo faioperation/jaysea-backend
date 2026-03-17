@@ -10,7 +10,7 @@ This is a robust startup template for a backend application using Node.js, Expre
 - **User Management**: Profile management, user roles (System Owner, Business Owner, Staff, Customer), and details retrieval.
 - **Validation**: Request body and parameter validation using `Zod`.
 - **Database Architecture**: Managed by Prisma ORM with PostgreSQL.
-- **Error Handling**: Centralized error management system.
+- **Error Handling**: Centralized error management system using `catchAsync` utility for cleaner controller logic.
 - **Mailing**: Integration with `nodemailer` for automated emails with modern, responsive EJS templates.
 - **File Upload System**: Reusable Multer configuration supporting multiple categories (e.g., avatars) with automatic path handling and unique naming.
 - **Static Assets**: Dedicated structure for serving uploaded files (e.g., user avatars) statically.
@@ -57,7 +57,7 @@ This is a robust startup template for a backend application using Node.js, Expre
    - Production: `npm start`
 
 ## 🛣️ API Routes & CRUD
-### BASE URL > http://localhost:8000/api/
+### BASE URL > http://localhost:8001/api/
 ### Auth Module (`/api/auth`)
 | Method | Route | Description |
 | :--- | :--- | :--- |
@@ -67,21 +67,16 @@ This is a robust startup template for a backend application using Node.js, Expre
 | POST | `/auth/forgot-password` | Initiate forgot password flow |
 | POST | `/auth/verify-forgot-password-otp` | Verify OTP for password reset |
 | POST | `/auth/reset-password` | Reset user password (Auth required) |
-| POST | `/auth/change-password` | Change user password (Auth required) | OldPassword - NewPassword Required
-| GET | `/auth/google` | Initiate Google OAuth login |
-| GET | `/auth/google/url` | Get the Google OAuth authorization URL |
-| GET | `/auth/google/callback` | Google OAuth callback URL |
+| POST | `/auth/change-password` | Change user password (Auth required) |
 
 ### User Module (`/api/user`)
 | Method | Route | Description |
 | :--- | :--- | :--- |
-| POST | `/user/register` | Register a new user (Supports optional avatar upload) |
-| GET | `/user/profile/me` | Get current logged-in user profile |
-| GET | `/user/user-details/:id` | Get specific user details by ID |
-| GET | `/user/all` | Get all users with profiles |
-| POST | `/user/update-user` | Update user information (Admin only) |
-| PATCH | `/user/update-profile` | Update current user profile (Auth required) |
-| PATCH | `/user/upload-avatar` | Upload or update user avatar (Auth required) |
+| POST | `/user/register` | Register a new user |
+| GET | `/user/profile/me` | Get current user profile |
+| GET | `/user/user-details/:id` | Get specific user details |
+| PATCH | `/user/update-profile` | Update current user profile |
+| PATCH | `/user/upload-avatar` | Upload or update user avatar |
 
 ### OTP Module (`/api/otp`)
 | Method | Route | Description |
@@ -89,43 +84,37 @@ This is a robust startup template for a backend application using Node.js, Expre
 | POST | `/otp/send` | Send OTP to user email |
 | POST | `/otp/verify` | Verify the sent OTP |
 
-### Mobile Auth Module (`/api/mobile/auth`)
+### Agen Management Module (`/api/agen-management`)
 | Method | Route | Description |
 | :--- | :--- | :--- |
-| POST | `/mobile/auth/login` | Mobile user login |
-| POST | `/mobile/auth/refresh-token` | Refresh mobile access token |
-| POST | `/mobile/auth/change-password` | Change mobile user password (Auth required) |
-| POST | `/mobile/auth/forgot-password` | Initiate forgot password for mobile |
-| POST | `/mobile/auth/verify-forgot-password` | Verify OTP for mobile reset |
-| POST | `/mobile/auth/reset-password` | Reset mobile user password (Auth required) |
+| POST | `/agen-management` | Create a new agent |
+| GET | `/agen-management` | Get all agents |
+| GET | `/agen-management/:id` | Get specific agent by ID |
+| PATCH | `/agen-management/:id` | Update agent details |
+| DELETE | `/agen-management/:id` | Delete an agent |
 
-### Mobile User Module (`/api/mobile/user`)
+### Instances Module (`/api/instances`)
 | Method | Route | Description |
 | :--- | :--- | :--- |
-| POST | `/mobile/user/register` | Register a new mobile user (Optional avatar upload) |
-| GET | `/mobile/user/profile/me` | Get mobile user profile (Auth required) |
-| PATCH | `/mobile/user/update-profile` | Update mobile user profile (Auth required) |
+| POST | `/instances` | Create a new instance |
+| GET | `/instances` | Get all instances |
+| GET | `/instances/:id` | Get specific instance |
+| PATCH | `/instances/:id` | Update instance |
+| DELETE | `/instances/:id` | Delete instance |
 
-### Mobile OTP Module (`/api/mobile/otp`)
+### Messages Module (`/api/messages`)
 | Method | Route | Description |
 | :--- | :--- | :--- |
-| POST | `/mobile/otp/send` | Send OTP to mobile user email |
-| POST | `/mobile/otp/verify` | Verify OTP for mobile user |
+| POST | `/messages` | Send a new message |
+| GET | `/messages/:instance_id` | Get message history for an instance |
+| GET | `/messages/all` | Get all messages |
+| GET | `/messages/instances` | Get message instances |
 
-
----
-
-## 📱 Mobile App Authentication Module
-
-This project includes a dedicated authentication module for mobile applications located in `src/app/modules/MobileApp-Auth`.
-
-- **Usage**: If your project involves a mobile application, you can use this module to handle authentication for any user role.
-- **Removal**: If you do not need mobile-specific authentication, you can safely remove it by following these steps:
-  1. **Delete Folder**: Delete the `src/app/modules/MobileApp-Auth` directory.
-  2. **Clean Router**: In `src/app/router/index.js`, remove the imports and routes for `MobileAuthRoutes`, `MobileUserRoutes`, and `MobileOtpRoutes`.
-  3. **Update Middleware**: In `src/app/middleware/checkAuthMiddleware.js`, remove the conditional block that queries `prisma.mobileUser`.
-  4. **Remove Seeding**: In `src/app/prisma/seed.js`, remove the `mobileUsers` array and the loop that seeds them.
-  5. **Prisma Cleanup**: Delete the `MobileUser` model from `prisma/schema.prisma` and run `npx prisma migrate dev`.
+### Admin Module (`/api/admin`)
+| Method | Route | Description |
+| :--- | :--- | :--- |
+| GET | `/admin/users` | Get all users (Admin only) |
+| GET | `/admin/user-instances/:id` | Get instances for a specific user |
 
 ---
 

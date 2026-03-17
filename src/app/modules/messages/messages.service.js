@@ -18,9 +18,8 @@ export const MessageService = {
       targetInstanceId = instance.id;
     } else {
       // Verify instance belongs to user
-      const where = owner.isMobile ? { id: targetInstanceId, mobileUserId: owner.id } : { id: targetInstanceId, userId: owner.id };
       const instance = await prisma.instance.findFirst({
-        where,
+        where: { id: targetInstanceId, userId: owner.id },
       });
 
       if (!instance) {
@@ -42,6 +41,7 @@ export const MessageService = {
         docummentsPaths: true,
         voiceUrls: true,
         voicePaths: true,
+        userRole: true,
       },
     });
   },
@@ -68,11 +68,10 @@ export const MessageService = {
         messageData.content.split(" ").slice(0, 5).join(" ") +
         (messageData.content.split(" ").length > 5 ? "..." : "");
 
-      const ownerData = owner.isMobile ? { mobileUserId: owner.id } : { userId: owner.id };
-      
       const newInstance = await prisma.instance.create({
         data: {
-          ...ownerData,
+          userId: owner.id,
+          userRole: owner.role,
           agentId,
           name: truncatedName || "New Conversation",
         },
@@ -80,9 +79,8 @@ export const MessageService = {
       targetInstanceId = newInstance.id;
     } else {
       // Verify existing instance belongs to user
-      const where = owner.isMobile ? { id: targetInstanceId, mobileUserId: owner.id } : { id: targetInstanceId, userId: owner.id };
       const instance = await prisma.instance.findFirst({
-        where,
+        where: { id: targetInstanceId, userId: owner.id },
       });
 
       if (!instance) {
@@ -114,6 +112,7 @@ export const MessageService = {
       data: {
         ...messageData,
         instanceId: targetInstanceId,
+        userRole: owner.role,
         docummentsUrls: docummentsUrls || [],
         docummentsPaths: docummentsPaths || [],
         voiceUrls: voiceUrls || [],
@@ -123,11 +122,9 @@ export const MessageService = {
   },
 
   getAllMessages: async (prisma, owner) => {
-    const ownerWhere = owner.isMobile ? { mobileUserId: owner.id } : { userId: owner.id };
-
     return prisma.message.findMany({
       where: {
-        instance: ownerWhere,
+        instance: { userId: owner.id },
       },
       orderBy: {
         createdAt: "desc",
