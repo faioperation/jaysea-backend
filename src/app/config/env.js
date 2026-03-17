@@ -14,6 +14,7 @@ const loadEnvVars = () => {
     "DATABASE_URL",
 
     "REDIS_URL",
+    "AI_URL",
   ];
 
   requiredVars.forEach((key) => {
@@ -53,6 +54,7 @@ const loadEnvVars = () => {
     // Frontend
     FRONT_END_URL: process.env.FRONT_END_URL,
     BACKEND_URL: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`,
+    AI_URL: process.env.AI_URL,
   };
 };
 

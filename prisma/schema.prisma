@@ -12,7 +12,7 @@ enum UserRole {
   BUSINESS_OWNER @map("business_owner")
   ADMIN          @map("admin")
   USER          @map("user")
-
+  ASSISTANT     @map("assistant")
 }
 
 enum OAuthProvider {

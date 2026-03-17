@@ -1,5 +1,7 @@
 import DevBuildError from "../../lib/DevBuildError.js";
 import { InstanceMessageService } from "../instanceMessage/instanceMessage.service.js";
+import axios from "axios";
+import { envVars } from "../../config/env.js";
 
 export const MessageService = {
   getMessagesByInstanceId: async (prisma, owner, instanceId, agentId) => {
@@ -108,7 +110,7 @@ export const MessageService = {
       }
     }
 
-    return prisma.message.create({
+  await prisma.message.create({
       data: {
         ...messageData,
         instanceId: targetInstanceId,
@@ -119,6 +121,47 @@ export const MessageService = {
         voicePaths: voicePaths || [],
       },
     });
+
+    try {
+      const response = await axios.post(`${envVars.AI_URL}/chat`, {
+        user_query: messageData.content,
+        conversation_id: targetInstanceId,
+      });
+
+      // Assuming the response contains the text in response.data.response 
+      // or similar. I'll use a safe fallback.
+      const aiResponseContent = response.data?.response || response.data?.message || JSON.stringify(response.data);
+
+      // Extract attachments if provided by the AI
+      const docummentsUrls = response.data?.docummentsUrls || [];
+      const docummentsPaths = response.data?.docummentsPaths || [];
+      const voiceUrls = response.data?.voiceUrls || [];
+      const voicePaths = response.data?.voicePaths || [];
+
+      const assistantMessage = await prisma.message.create({
+        data: {
+          instanceId: targetInstanceId,
+          role: "ASSISTANT",
+          content: aiResponseContent.toString(),
+          userRole: "ASSISTANT",
+          docummentsUrls,
+          docummentsPaths,
+          voiceUrls,
+          voicePaths,
+        },
+      });
+
+      return assistantMessage;
+    } catch (error) {
+      console.error("AI API Call Failed:", error.message);
+      throw new DevBuildError(`Failed to get response from AI: ${error.message}`, 500);
+    }
+
+    
+
+
+
+
   },
 
   getAllMessages: async (prisma, owner) => {
