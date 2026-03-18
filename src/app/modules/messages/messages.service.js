@@ -130,11 +130,11 @@ export const MessageService = {
         voicePaths: voicePaths || [],
       },
     });
-console.log('User Id for call ai >', owner.id)
+    console.log('User Id for call ai >', owner.id)
     try {
       const response = await axios.post(`${envVars.AI_URL}/chat`, {
         user_query: messageData.content,
-        user_id : owner.id,
+        user_id: owner.id,
         conversation_id: targetInstanceId,
       });
 
@@ -142,7 +142,7 @@ console.log('User Id for call ai >', owner.id)
 
       // Extract the nested data object based on the observed response structure: response.data.data.data
       const responseData = response.data?.data?.data || response.data?.data || response.data;
-      
+
       const aiResponseContent = responseData?.content || responseData?.response || responseData?.message || "No response content from AI";
 
       // Extract attachments if provided by the AI in the same nested level
@@ -150,6 +150,9 @@ console.log('User Id for call ai >', owner.id)
       const docummentsPaths = responseData?.docummentsPaths || [];
       const voiceUrls = responseData?.voiceUrls || [];
       const voicePaths = responseData?.voicePaths || [];
+
+      const usage = response.data?.data?.usage;
+      const meta = response.data?.meta;
 
       const assistantMessage = await prisma.message.create({
         data: {
@@ -161,18 +164,22 @@ console.log('User Id for call ai >', owner.id)
           docummentsPaths,
           voiceUrls,
           voicePaths,
+          promptTokens: usage?.prompt_tokens,
+          completionTokens: usage?.completion_tokens,
+          totalTokens: usage?.total_tokens,
+          model: meta?.model,
         },
       });
 
       // Save Experience if not a filler word (check both user query and AI response)
       const fillerWords = [
-        "ok", "okay", "yes", "no", "hmm", "hmmm", "huh", "yo", "hey", "hi", 
+        "ok", "okay", "yes", "no", "hmm", "hmmm", "huh", "yo", "hey", "hi",
         "hello", "thanks", "thank", "cool", "fine", "done", "right", "sure"
       ];
-      
+
       const cleanUserQuery = messageData.content.trim().toLowerCase().replace(/[^\w\s]/gi, '');
       const cleanResponse = aiResponseContent.toString().trim().toLowerCase().replace(/[^\w\s]/gi, '');
-      
+
       if (!fillerWords.includes(cleanUserQuery) && !fillerWords.includes(cleanResponse)) {
         await prisma.experience.create({
           data: {
@@ -181,7 +188,11 @@ console.log('User Id for call ai >', owner.id)
             instanceId: targetInstanceId,
             userQuery: messageData.content,
             aiResponse: aiResponseContent.toString(),
-            content: `${messageData.content} ${aiResponseContent.toString()}`,
+            content: `${messageData.content} | ${aiResponseContent.toString()}`,
+            promptTokens: usage?.prompt_tokens,
+            completionTokens: usage?.completion_tokens,
+            totalTokens: usage?.total_tokens,
+            model: meta?.model,
           },
         });
       }

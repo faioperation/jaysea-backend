@@ -109,6 +109,11 @@ model Message {
   voiceUrls       String[]    @default([])
   voicePaths      String[]    @default([])
 
+  promptTokens     Int?
+  completionTokens Int?
+  totalTokens      Int?
+  model            String?
+
   createdAt  DateTime     @default(now())
 
   @@index([instanceId])
@@ -130,6 +135,12 @@ model Experience {
   aiResponse   String
 
   content      String   @db.Text
+  
+  promptTokens     Int?
+  completionTokens Int?
+  totalTokens      Int?
+  model            String?
+
   createdAt    DateTime @default(now())
 
   @@index([userId])
