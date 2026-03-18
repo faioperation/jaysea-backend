@@ -130,10 +130,11 @@ export const MessageService = {
         voicePaths: voicePaths || [],
       },
     });
-
+console.log('User Id for call ai >', owner.id)
     try {
       const response = await axios.post(`${envVars.AI_URL}/chat`, {
         user_query: messageData.content,
+        user_id : owner.id,
         conversation_id: targetInstanceId,
       });
 
